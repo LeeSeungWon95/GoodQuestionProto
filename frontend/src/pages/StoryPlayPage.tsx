@@ -23,18 +23,9 @@ export default function StoryPlayPage({
   const [scene, setScene] = useState<SceneView | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  // 이 이야기의 미완료 세션 존재 여부 → [이어하기]/[처음부터 다시] 분기
-  const [hasUnfinished, setHasUnfinished] = useState(false);
-
-  useEffect(() => {
-    api<{ session: { storyId: string } | null }>(`/children/${child.id}/active-session`)
-      .then((res) => setHasUnfinished(res.session?.storyId === story.id))
-      .catch(() => setHasUnfinished(false));
-  }, [child.id, story.id]);
-
   // 홈의 [이어하기]로 들어온 경우: 상세 화면을 건너뛰고 즉시 재개
   useEffect(() => {
-    if (autoStart) startSession();
+    if (autoStart) startSession(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart]);
 
@@ -99,20 +90,10 @@ export default function StoryPlayPage({
           <p>{story.summary}</p>
           <p className="meta">{child.name}(이)가 이야기 속 인물들과 직접 대화하게 돼요.</p>
           {error && <p className="msg">{error}</p>}
-          {hasUnfinished ? (
-            <>
-              <button onClick={() => startSession()} disabled={busy}>
-                {busy ? '준비 중...' : '▶ 이어하기 (하던 데부터)'}
-              </button>
-              <button className="link" onClick={() => startSession(true)} disabled={busy}>
-                처음부터 다시 시작
-              </button>
-            </>
-          ) : (
-            <button onClick={() => startSession()} disabled={busy}>
-              {busy ? '준비 중...' : '이야기 시작'}
-            </button>
-          )}
+          {/* 카드 경로는 항상 처음부터 (이어하기는 홈 배너가 전담) */}
+          <button onClick={() => startSession(true)} disabled={busy}>
+            {busy ? '준비 중...' : '이야기 시작'}
+          </button>
           <button className="link" onClick={onExit}>
             ← 목록으로
           </button>
