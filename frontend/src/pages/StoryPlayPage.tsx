@@ -102,7 +102,7 @@ export default function StoryPlayPage({
 
   return (
     <main className="center">
-      <div className="card">
+      <div className="card wide">
         <p className="meta">
           {story.title} · 장면 {scene.sceneOrder}/9
         </p>

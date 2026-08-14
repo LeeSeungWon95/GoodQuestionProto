@@ -27,6 +27,11 @@ body {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
+/* 이야기 진행 화면용 넓은 카드 — 태블릿 가로 화면 대응 */
+.card.wide {
+  max-width: 680px;
+}
+
 h1 {
   margin: 0 0 4px;
   font-size: 28px;
@@ -207,6 +212,12 @@ select {
   font-family: inherit;
   resize: none;
   margin-bottom: 0;
+  overflow-y: auto;
+  min-height: 84px;
+}
+
+.chat {
+  max-height: 55vh;
 }
 
 .micbtn {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../lib/api';
 import { useSpeechInput } from '../lib/useSpeechInput';
 import type { CharacterMessage, SceneView } from '../lib/types';
@@ -42,6 +42,16 @@ export default function DialoguePanel({
   const [error, setError] = useState('');
   // 음성 입력 — 인식 결과를 입력창에 채우고, 아이가 [보내기]로 확정 (FR-05 흐름)
   const mic = useSpeechInput(setInput);
+
+  // 입력칸 자동 확장: 내용 길이에 맞춰 키가 늘어남 (최대 220px, 그 이상만 스크롤)
+  const boxRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const el = boxRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = `${Math.min(el.scrollHeight, 220)}px`;
+    }
+  }, [input]);
 
   async function send() {
     const text = input.trim();
@@ -118,8 +128,9 @@ export default function DialoguePanel({
               </button>
             )}
             <textarea
+              ref={boxRef}
               className="talkbox"
-              rows={2}
+              rows={3}
               placeholder={
                 mic.supported
                   ? '🎤를 누르고 말하거나, 글로 적어보세요'
