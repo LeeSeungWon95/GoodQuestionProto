@@ -196,6 +196,43 @@ select {
   gap: 8px;
 }
 
+.micbtn {
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  font-size: 20px;
+  padding: 8px 14px;
+}
+
+.micbtn.on {
+  background: #fee2e2;
+  border-color: #ef4444;
+  animation: pulse 1.2s infinite;
+}
+
+.micbtn.wide {
+  width: 100%;
+  font-size: 16px;
+  color: #2b2b2b;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.listening {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
 .inputrow input {
   flex: 1;
 }

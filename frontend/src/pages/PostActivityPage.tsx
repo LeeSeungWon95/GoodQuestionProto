@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, ApiError } from '../lib/api';
+import { useSpeechInput } from '../lib/useSpeechInput';
 import type { ChildInfo } from '../lib/types';
 
 interface Card {
@@ -27,6 +28,7 @@ export default function PostActivityPage({
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const mic = useSpeechInput(setRetellText); // 재구성 말하기 음성 입력
 
   useEffect(() => {
     api<{ cards: Card[] }>(`/sessions/${sessionId}/post-activity`)
@@ -105,10 +107,16 @@ export default function PostActivityPage({
               </span>
             ))}
           </p>
-          <p className="note">
-            🎤 원래는 {child.name}(이)가 음성으로 이야기하는 단계예요 — 음성 기능이 준비될 때까지
-            글로 적어볼게요.
-          </p>
+          {mic.supported && (
+            <button
+              type="button"
+              className={`micbtn wide${mic.listening ? ' on' : ''}`}
+              onClick={() => (mic.listening ? mic.stop() : mic.start())}
+              disabled={busy}
+            >
+              {mic.listening ? '🎤 듣고 있어요...' : '🎤 말로 이야기하기'}
+            </button>
+          )}
           <textarea
             rows={4}
             placeholder="옛날에 방귀를 크게 뀌는 며느리가 살았는데..."

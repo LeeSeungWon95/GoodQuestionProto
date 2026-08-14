@@ -120,7 +120,6 @@ export default function StoryPlayPage({
             key={scene.sceneId} // 장면이 바뀌면 대화 내역을 새로 시작
             sessionId={sessionId}
             scene={scene}
-            childName={child.name}
             onSceneClosed={(isStoryComplete) => {
               if (isStoryComplete) setPhase('post');
               else advance();

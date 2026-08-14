@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api, ApiError } from '../lib/api';
+import { useSpeechInput } from '../lib/useSpeechInput';
 import type { CharacterMessage, SceneView } from '../lib/types';
 
 interface ChatMessage {
@@ -22,12 +23,10 @@ interface SubmitResult {
 export default function DialoguePanel({
   sessionId,
   scene,
-  childName,
   onSceneClosed,
 }: {
   sessionId: string;
   scene: SceneView;
-  childName: string;
   onSceneClosed: (isStoryComplete: boolean) => void;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>(
@@ -41,6 +40,8 @@ export default function DialoguePanel({
   const [storyComplete, setStoryComplete] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // 음성 입력 — 인식 결과를 입력창에 채우고, 아이가 [보내기]로 확정 (FR-05 흐름)
+  const mic = useSpeechInput(setInput);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -97,13 +98,25 @@ export default function DialoguePanel({
         </button>
       ) : (
         <>
-          <p className="note">
-            🎤 원래는 {childName}(이)가 말로 대답하는 화면이에요 — 음성 기능이 준비될 때까지 글로
-            적어볼게요.
-          </p>
+          {mic.listening && <p className="note listening">🎤 듣고 있어요... 다 말하면 잠깐 기다려주세요</p>}
           <form onSubmit={send} className="inputrow">
+            {mic.supported && (
+              <button
+                type="button"
+                className={`micbtn${mic.listening ? ' on' : ''}`}
+                onClick={() => (mic.listening ? mic.stop() : mic.start())}
+                disabled={busy}
+                aria-label="음성으로 말하기"
+              >
+                🎤
+              </button>
+            )}
             <input
-              placeholder={`${scene.characterName}에게 대답해보세요`}
+              placeholder={
+                mic.supported
+                  ? '🎤를 누르고 말하거나, 글로 적어보세요'
+                  : `${scene.characterName}에게 대답해보세요`
+              }
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={busy}
