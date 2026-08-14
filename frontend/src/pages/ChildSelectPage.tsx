@@ -3,13 +3,16 @@ import { api, ApiError } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import type { ChildInfo } from '../lib/types';
 
-// 아이 선택 화면 (FR-01) — 화면 흐름도: 로그인 → 아이 선택 → 홈
-// 등록된 아이가 없으면 등록 폼을 보여준다. 등록 시 개인정보 동의 필수 (child_consents).
+// 아이 선택 화면 (FR-01) — 세 가지 모드로 동작:
+//   normal   아이 선택 + [프로필 관리] [+ 아이 추가 등록] [로그아웃]
+//   manage   아이마다 [삭제] + [+ 아이 추가 등록] [← 뒤로가기]
+//   register 등록 폼 + [← 뒤로가기] (아이가 0명이면 강제 진입, 뒤로가기 없음)
+type Mode = 'normal' | 'manage' | 'register';
+
 export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildInfo) => void }) {
   const [children, setChildren] = useState<ChildInfo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState(false); // 관리(삭제) 모드
+  const [mode, setMode] = useState<Mode>('normal');
   const [error, setError] = useState('');
 
   const [name, setName] = useState('');
@@ -17,12 +20,12 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
   const [consented, setConsented] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  async function loadChildren() {
+  async function loadChildren(nextMode?: Mode) {
     try {
       const res = await api<{ children: ChildInfo[] }>('/children');
       setChildren(res.children);
-      setShowForm(res.children.length === 0); // 아이가 없으면 바로 등록 폼
-      if (res.children.length === 0) setEditing(false); // 관리할 대상이 없으면 관리 모드 해제
+      if (res.children.length === 0) setMode('register'); // 등록할 수밖에 없는 상태
+      else if (nextMode) setMode(nextMode);
     } catch (e) {
       setError(e instanceof ApiError ? `오류 ${e.status}: ${e.code}` : String(e));
     }
@@ -34,6 +37,11 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  function switchMode(next: Mode) {
+    setMode(next);
+    setError('');
+  }
+
   async function removeChild(c: ChildInfo) {
     // 되돌릴 수 없는 삭제 — 반드시 확인을 거친다
     const ok = window.confirm(
@@ -44,7 +52,7 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
     setError('');
     try {
       await api(`/children/${c.id}`, { method: 'DELETE' });
-      await loadChildren();
+      await loadChildren('manage'); // 삭제 후에도 관리 모드 유지 (0명이면 자동으로 등록 폼)
     } catch (e) {
       setError(e instanceof ApiError ? `삭제 실패 ${e.status}: ${e.code}` : String(e));
     }
@@ -66,8 +74,7 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
       });
       setName('');
       setConsented(false);
-      setShowForm(false);
-      await loadChildren();
+      await loadChildren('normal'); // 등록 완료 → 평소 모드로
     } catch (e) {
       setError(e instanceof ApiError ? `등록 실패 ${e.status}: ${e.code}` : String(e));
     }
@@ -82,36 +89,34 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
     <main className="center">
       <div className="card">
         <h1>누가 이야기할까요?</h1>
-        <p className="sub">아이를 선택하거나 새로 등록하세요</p>
+        <p className="sub">
+          {mode === 'manage'
+            ? '삭제할 프로필을 선택하세요'
+            : mode === 'register'
+              ? '새 아이를 등록해요'
+              : '아이를 선택하거나 새로 등록하세요'}
+        </p>
 
-        {children.map((c) => (
-          <div key={c.id} className="childrow">
-            <button className="child" onClick={() => onSelect(c)} disabled={editing || busy}>
-              <strong>{c.name}</strong>
-              <span className="meta">{c.birthYear}년생</span>
-            </button>
-            {editing && (
-              <button className="delbtn" onClick={() => removeChild(c)} disabled={busy}>
-                삭제
+        {mode !== 'register' &&
+          children.map((c) => (
+            <div key={c.id} className="childrow">
+              <button
+                className="child"
+                onClick={() => onSelect(c)}
+                disabled={mode === 'manage' || busy}
+              >
+                <strong>{c.name}</strong>
+                <span className="meta">{c.birthYear}년생</span>
               </button>
-            )}
-          </div>
-        ))}
+              {mode === 'manage' && (
+                <button className="delbtn" onClick={() => removeChild(c)} disabled={busy}>
+                  삭제
+                </button>
+              )}
+            </div>
+          ))}
 
-        {children.length > 0 && (
-          <button
-            className="link"
-            onClick={() => {
-              setEditing(!editing);
-              setShowForm(false); // 관리 모드와 등록 폼은 동시에 열리지 않음
-              setError('');
-            }}
-          >
-            {editing ? '관리 끝내기' : '프로필 관리 (삭제)'}
-          </button>
-        )}
-
-        {showForm ? (
+        {mode === 'register' && (
           <form onSubmit={handleRegister}>
             <input
               placeholder="아이 이름 (별명도 좋아요)"
@@ -142,23 +147,40 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
               {busy ? '등록 중...' : '아이 등록'}
             </button>
           </form>
-        ) : (
-          <button
-            className="link"
-            onClick={() => {
-              setShowForm(true);
-              setEditing(false); // 등록 폼을 열면 관리 모드 종료
-            }}
-          >
-            + 아이 추가 등록
-          </button>
         )}
 
         {error && <p className="msg">{error}</p>}
 
-        <button className="link" onClick={() => supabase.auth.signOut()}>
-          로그아웃
-        </button>
+        <div className="linkrow">
+          {mode === 'normal' && (
+            <>
+              <button className="link" onClick={() => switchMode('manage')}>
+                프로필 관리
+              </button>
+              <button className="link" onClick={() => switchMode('register')}>
+                + 아이 추가 등록
+              </button>
+              <button className="link" onClick={() => supabase.auth.signOut()}>
+                로그아웃
+              </button>
+            </>
+          )}
+          {mode === 'manage' && (
+            <>
+              <button className="link" onClick={() => switchMode('register')}>
+                + 아이 추가 등록
+              </button>
+              <button className="link" onClick={() => switchMode('normal')}>
+                ← 뒤로가기
+              </button>
+            </>
+          )}
+          {mode === 'register' && children.length > 0 && (
+            <button className="link" onClick={() => switchMode('normal')}>
+              ← 뒤로가기
+            </button>
+          )}
+        </div>
       </div>
     </main>
   );

@@ -124,6 +124,12 @@ select {
   font-weight: 600;
 }
 
+.linkrow {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
 .consent {
   display: flex;
   gap: 8px;
