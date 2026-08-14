@@ -43,6 +43,7 @@ export function useSpeechInput(onText: (text: string) => void) {
   const [micError, setMicError] = useState('');
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const wantRef = useRef(false); // 사용자가 "계속 듣기"를 원하는 상태 (버튼으로 제어)
+  const ignoreRef = useRef(false); // 파기 정지 후 늦게 도착하는 인식 결과 무시 (입력칸 되살아남 방지)
   const baseRef = useRef(''); // 이전 인식 세션까지 누적 확정된 텍스트
   const lastRef = useRef(''); // 현재 세션에서 마지막으로 받은 텍스트
   const supported = getRecognitionCtor() !== null;
@@ -66,6 +67,7 @@ export function useSpeechInput(onText: (text: string) => void) {
     rec.continuous = true; // 잠깐 침묵해도 바로 끊지 않음
 
     rec.onresult = (e) => {
+      if (ignoreRef.current) return; // 파기 정지 이후의 늦은 결과는 버림
       const text = Array.from(e.results, (r) => r[0].transcript).join('');
       lastRef.current = text;
       onText(`${baseRef.current} ${text}`.trim());
@@ -104,6 +106,7 @@ export function useSpeechInput(onText: (text: string) => void) {
     baseRef.current = '';
     lastRef.current = '';
     wantRef.current = true;
+    ignoreRef.current = false;
     setListening(true);
     try {
       begin();
@@ -114,10 +117,18 @@ export function useSpeechInput(onText: (text: string) => void) {
     }
   }
 
+  // 보통 정지: 지금까지 말한 텍스트는 입력칸에 유지 (🎤 버튼으로 끌 때)
   function stop() {
     wantRef.current = false;
     recRef.current?.stop();
   }
 
-  return { supported, listening, micError, start, stop };
+  // 파기 정지: 정지 + 이후 도착하는 인식 결과 무시 (보내기·제출 직후 입력칸 오염 방지)
+  function cancel() {
+    ignoreRef.current = true;
+    wantRef.current = false;
+    recRef.current?.stop();
+  }
+
+  return { supported, listening, micError, start, stop, cancel };
 }

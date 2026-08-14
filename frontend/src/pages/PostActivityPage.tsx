@@ -79,7 +79,7 @@ export default function PostActivityPage({
   }
 
   async function submitRetelling() {
-    mic.stop(); // 제출 시 마이크 자동 종료
+    mic.cancel(); // 제출 시 마이크 파기 정지 (늦은 인식 결과 무시)
     setBusy(true);
     setError('');
     try {

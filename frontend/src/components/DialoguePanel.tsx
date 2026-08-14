@@ -74,7 +74,7 @@ export default function DialoguePanel({
   }, [messages]);
 
   async function send() {
-    mic.stop(); // 말하던 중 보내기를 눌러도 마이크 자동 종료
+    mic.cancel(); // 마이크 파기 정지 — 늦게 오는 인식 결과가 빈 입력칸을 되살리지 않도록
     const text = input.trim();
     if (!text) return;
     setBusy(true);
