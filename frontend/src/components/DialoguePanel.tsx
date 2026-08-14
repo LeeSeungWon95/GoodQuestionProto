@@ -64,11 +64,13 @@ export default function DialoguePanel({
   }, [input]);
 
   // 캐릭터 대사 자동 낭독 (FR-04·인터뷰 #2) — 새 캐릭터 메시지가 도착하면 재생
+  // 단, 아이가 마이크로 말하는 중이면 끼어들지 않는다 (다시 듣기로 나중에 재생 가능)
   const lastCharacterText = [...messages].reverse().find((m) => m.who === 'character')?.text ?? '';
   useEffect(() => {
     const last = messages[messages.length - 1];
-    if (last?.who === 'character') speak(last.text);
+    if (last?.who === 'character' && !mic.listening) speak(last.text);
     return stopSpeaking; // 아이가 보내거나 화면을 떠나면 중단
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
   async function send() {
