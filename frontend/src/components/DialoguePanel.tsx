@@ -72,6 +72,7 @@ export default function DialoguePanel({
   }, [messages]);
 
   async function send() {
+    mic.stop(); // 말하던 중 보내기를 눌러도 마이크 자동 종료
     const text = input.trim();
     if (!text) return;
     setBusy(true);
