@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, ApiError } from '../lib/api';
+import { speak, splitSentences, stopSpeaking, ttsSupported } from '../lib/tts';
 import type { ChildInfo, SceneView, Story } from '../lib/types';
 import DialoguePanel from '../components/DialoguePanel';
 import PostActivityPage from './PostActivityPage';
@@ -28,6 +29,15 @@ export default function StoryPlayPage({
     if (autoStart) startSession(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart]);
+
+  // 도입·전개 장면: 내레이션 자동 낭독 (FR-04·인터뷰 #2). 장면 전환·이탈 시 중단
+  useEffect(() => {
+    if (phase === 'playing' && scene && scene.sceneType !== 'dialogue' && scene.narration) {
+      speak(scene.narration);
+    }
+    return stopSpeaking;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene?.sceneId, phase]);
 
   async function startSession(restart = false) {
     setBusy(true);
@@ -116,10 +126,23 @@ export default function StoryPlayPage({
           {story.title} · 장면 {scene.sceneOrder}/9
         </p>
 
+        {scene.imageUrl && <img className="scene-img" src={scene.imageUrl} alt="장면 그림" />}
+
         {scene.sceneType !== 'dialogue' ? (
           <>
-            {/* 도입·전개: 내레이션 (콘텐츠 문서: 전체 화면 스토리 영역) */}
-            <p className="narration">{scene.narration}</p>
+            {/* 도입·전개: 내레이션 — 한 문장씩 줄을 나눠 표시 (인터뷰 #1) */}
+            <p className="narration">
+              {splitSentences(scene.narration ?? '').map((s, i) => (
+                <span key={i} className="line">
+                  {s}
+                </span>
+              ))}
+            </p>
+            {ttsSupported && (
+              <button className="link" onClick={() => speak(scene.narration ?? '')}>
+                🔊 다시 듣기
+              </button>
+            )}
             <button onClick={advance} disabled={busy}>
               {busy ? '...' : '다음으로'}
             </button>

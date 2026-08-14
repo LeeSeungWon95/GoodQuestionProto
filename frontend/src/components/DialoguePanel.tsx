@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../lib/api';
+import { speak, splitSentences, stopSpeaking, ttsSupported } from '../lib/tts';
 import { useSpeechInput } from '../lib/useSpeechInput';
 import type { CharacterMessage, SceneView } from '../lib/types';
 
@@ -53,6 +54,14 @@ export default function DialoguePanel({
     }
   }, [input]);
 
+  // 캐릭터 대사 자동 낭독 (FR-04·인터뷰 #2) — 새 캐릭터 메시지가 도착하면 재생
+  const lastCharacterText = [...messages].reverse().find((m) => m.who === 'character')?.text ?? '';
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (last?.who === 'character') speak(last.text);
+    return stopSpeaking; // 아이가 보내거나 화면을 떠나면 중단
+  }, [messages]);
+
   async function send() {
     const text = input.trim();
     if (!text) return;
@@ -93,11 +102,22 @@ export default function DialoguePanel({
       <div className="chat">
         {messages.map((m) => (
           <p key={m.id} className={m.who === 'character' ? 'bubble' : 'bubble-child'}>
-            {m.text}
+            {/* 한 문장씩 줄을 나눠 표시 — 저학년 가독성 (인터뷰 #1) */}
+            {splitSentences(m.text).map((s, i) => (
+              <span key={i} className="line">
+                {s}
+              </span>
+            ))}
           </p>
         ))}
         {busy && <p className="bubble thinking">생각 중...</p>}
       </div>
+
+      {ttsSupported && lastCharacterText && !busy && (
+        <button className="link" onClick={() => speak(lastCharacterText)}>
+          🔊 다시 듣기
+        </button>
+      )}
 
       {error && <p className="msg">{error}</p>}
 

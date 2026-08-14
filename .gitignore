@@ -21,3 +21,6 @@ backend/.agents/
 backend/.claude/
 backend/.windsurf/
 backend/skills-lock.json
+
+# Original artwork from organizers (33MB) - compressed copies live in frontend/public/scenes
+assets-src/

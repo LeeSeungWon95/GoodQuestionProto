@@ -37,18 +37,21 @@ async function main() {
         create: [
           {
             sceneOrder: 1,
+            imageUrl: '/scenes/scene-1.webp',
             sceneType: 'intro',
             sceneDescription:
               '옛날 어느 마을에 방귀를 아주 크게 뀌는 며느리가 살았습니다. 며느리는 시집에 온 뒤로 늘 얌전하고 예의 바르게 보이고 싶었습니다. 시댁 식구들이 자신을 이상하게 볼까 봐 걱정했기 때문입니다.',
           },
           {
             sceneOrder: 2,
+            imageUrl: '/scenes/scene-2.webp',
             sceneType: 'story',
             sceneDescription:
               '그래서 며느리는 방귀가 나오려고 할 때마다 꾹꾹 참았습니다. 하루도 참고, 이틀도 참고, 그렇게 오래 참다 보니 배는 점점 빵빵하게 부풀어 올랐고 얼굴은 노랗게 변했습니다. 몸도 마음도 너무 힘들었지만, 며느리는 차마 가족들에게 솔직하게 말하지 못했습니다.',
           },
           {
             sceneOrder: 3,
+            imageUrl: '/scenes/scene-3.webp',
             sceneType: 'dialogue',
             characterName: '방귀쟁이 며느리',
             conflict: '방귀를 참자니 몸이 힘들고, 솔직하게 말하자니 가족들이 이상하게 볼까 봐 두렵다.',
@@ -62,12 +65,14 @@ async function main() {
           },
           {
             sceneOrder: 4,
+            imageUrl: '/scenes/scene-4.webp',
             sceneType: 'story',
             sceneDescription:
               '며느리는 더 이상 참을 수 없어 몰래 살짝만 방귀를 뀌려고 합니다. 하지만 오래 참았던 탓에 방귀가 크게 터져 나왔습니다. 마당의 먼지가 휘리릭 날아가고, 기왓장이 달그락거리고, 시아버지의 갓까지 휙 날아가 버렸습니다.',
           },
           {
             sceneOrder: 5,
+            imageUrl: '/scenes/scene-5.webp',
             sceneType: 'dialogue',
             characterName: '시아버지',
             conflict: '며느리의 방귀에 놀라고 화가 나서 함께 살 수 없다고 생각한다.',
@@ -82,12 +87,14 @@ async function main() {
           },
           {
             sceneOrder: 6,
+            imageUrl: '/scenes/scene-6.webp',
             sceneType: 'story',
             sceneDescription:
               '한참 걷다 보니 아랫마을 길가에 아주 높은 배나무가 한 그루 서 있었습니다. 나무 꼭대기에는 노랗고 탐스러운 배들이 주렁주렁 매달려 있었습니다. 시아버지는 배를 보자 군침이 돌았습니다. 마침 아랫마을 사람들도 그 배를 먹고 싶어 했지만, 나무가 너무 높아 아무도 딸 수 없었습니다.',
           },
           {
             sceneOrder: 7,
+            imageUrl: '/scenes/scene-7.webp',
             sceneType: 'dialogue',
             characterName: '마을 이장',
             conflict: '탐스러운 배가 열렸지만 나무가 너무 높아 아무도 딸 수 없다.',
@@ -102,12 +109,14 @@ async function main() {
           },
           {
             sceneOrder: 8,
+            imageUrl: '/scenes/scene-8.webp',
             sceneType: 'story',
             sceneDescription:
               '시아버지는 며느리의 방귀가 시끄럽고 별난 것이 아니라, 모두를 도울 수 있는 특별한 힘이라는 것을 깨닫습니다. 자신이 며느리를 구박했던 일을 후회하고 사과합니다.',
           },
           {
             sceneOrder: 9,
+            imageUrl: '/scenes/scene-9.webp',
             sceneType: 'dialogue',
             characterName: '방귀쟁이 며느리',
             conflict: '숨기고 싶던 특징이 도움이 된다는 것을 알게 되어 마음이 변하고 있다.',
