@@ -119,9 +119,10 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
         {mode === 'register' && (
           <form onSubmit={handleRegister}>
             <input
-              placeholder="아이 이름 (별명도 좋아요)"
+              placeholder="아이 이름 (별명도 좋아요, 10자까지)"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              maxLength={10}
               required
             />
             <select value={birthYear} onChange={(e) => setBirthYear(Number(e.target.value))}>

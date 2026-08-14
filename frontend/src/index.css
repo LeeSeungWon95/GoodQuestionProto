@@ -101,11 +101,23 @@ select {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   flex: 1;
+  min-width: 0;
   background: #fff7ed;
   color: #2b2b2b;
   border: 1px solid #fed7aa;
   margin-bottom: 8px;
+}
+
+.child strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.child .meta {
+  flex-shrink: 0;
 }
 
 .child:disabled {
