@@ -157,9 +157,6 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
               <button className="link" onClick={() => switchMode('manage')}>
                 프로필 관리
               </button>
-              <button className="link" onClick={() => switchMode('register')}>
-                + 아이 추가 등록
-              </button>
               <button className="link" onClick={() => supabase.auth.signOut()}>
                 로그아웃
               </button>
