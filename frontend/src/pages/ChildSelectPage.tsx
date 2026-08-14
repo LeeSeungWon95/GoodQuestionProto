@@ -22,6 +22,7 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
       const res = await api<{ children: ChildInfo[] }>('/children');
       setChildren(res.children);
       setShowForm(res.children.length === 0); // 아이가 없으면 바로 등록 폼
+      if (res.children.length === 0) setEditing(false); // 관리할 대상이 없으면 관리 모드 해제
     } catch (e) {
       setError(e instanceof ApiError ? `오류 ${e.status}: ${e.code}` : String(e));
     }
@@ -102,6 +103,7 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
             className="link"
             onClick={() => {
               setEditing(!editing);
+              setShowForm(false); // 관리 모드와 등록 폼은 동시에 열리지 않음
               setError('');
             }}
           >
@@ -141,7 +143,13 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
             </button>
           </form>
         ) : (
-          <button className="link" onClick={() => setShowForm(true)}>
+          <button
+            className="link"
+            onClick={() => {
+              setShowForm(true);
+              setEditing(false); // 등록 폼을 열면 관리 모드 종료
+            }}
+          >
             + 아이 추가 등록
           </button>
         )}
