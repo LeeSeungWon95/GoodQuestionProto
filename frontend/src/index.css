@@ -142,6 +142,13 @@ select {
   flex-wrap: wrap;
 }
 
+.retellbox {
+  font-size: 18px;
+  line-height: 1.7;
+  min-height: 160px;
+  overflow-y: auto;
+}
+
 .consent {
   display: flex;
   gap: 8px;

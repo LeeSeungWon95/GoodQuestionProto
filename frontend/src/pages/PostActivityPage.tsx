@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../lib/api';
 import { stopSpeaking } from '../lib/tts';
 import { useSpeechInput } from '../lib/useSpeechInput';
@@ -30,6 +30,16 @@ export default function PostActivityPage({
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const mic = useSpeechInput(setRetellText); // 재구성 말하기 음성 입력
+
+  // 재구성 입력칸 자동 확장 (최대 360px, 그 이상만 스크롤)
+  const retellRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const el = retellRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = `${Math.min(Math.max(el.scrollHeight, 160), 360)}px`;
+    }
+  }, [retellText, step]);
 
   useEffect(() => {
     api<{ cards: Card[] }>(`/sessions/${sessionId}/post-activity`)
@@ -124,7 +134,9 @@ export default function PostActivityPage({
           )}
           {mic.micError && <p className="msg">{mic.micError}</p>}
           <textarea
-            rows={4}
+            ref={retellRef}
+            className="retellbox"
+            rows={6}
             placeholder="옛날에 방귀를 크게 뀌는 며느리가 살았는데..."
             value={retellText}
             onChange={(e) => setRetellText(e.target.value)}
