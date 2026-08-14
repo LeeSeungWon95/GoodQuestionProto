@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api, ApiError } from '../lib/api';
 import type { ChildInfo, SceneView, Story } from '../lib/types';
 import DialoguePanel from '../components/DialoguePanel';
@@ -21,8 +21,16 @@ export default function StoryPlayPage({
   const [scene, setScene] = useState<SceneView | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // 이 이야기의 미완료 세션 존재 여부 → [이어하기]/[처음부터 다시] 분기
+  const [hasUnfinished, setHasUnfinished] = useState(false);
 
-  async function startSession() {
+  useEffect(() => {
+    api<{ session: { storyId: string } | null }>(`/children/${child.id}/active-session`)
+      .then((res) => setHasUnfinished(res.session?.storyId === story.id))
+      .catch(() => setHasUnfinished(false));
+  }, [child.id, story.id]);
+
+  async function startSession(restart = false) {
     setBusy(true);
     setError('');
     try {
@@ -33,7 +41,7 @@ export default function StoryPlayPage({
         scene: SceneView | null;
       }>('/sessions', {
         method: 'POST',
-        body: JSON.stringify({ childId: child.id, storyId: story.id }),
+        body: JSON.stringify({ childId: child.id, storyId: story.id, restart }),
       });
       setSessionId(res.sessionId);
       if (res.status === 'post_activity') {
@@ -82,9 +90,20 @@ export default function StoryPlayPage({
           <p>{story.summary}</p>
           <p className="meta">{child.name}(이)가 이야기 속 인물들과 직접 대화하게 돼요.</p>
           {error && <p className="msg">{error}</p>}
-          <button onClick={startSession} disabled={busy}>
-            {busy ? '준비 중...' : '이야기 시작'}
-          </button>
+          {hasUnfinished ? (
+            <>
+              <button onClick={() => startSession()} disabled={busy}>
+                {busy ? '준비 중...' : '▶ 이어하기 (하던 데부터)'}
+              </button>
+              <button className="link" onClick={() => startSession(true)} disabled={busy}>
+                처음부터 다시 시작
+              </button>
+            </>
+          ) : (
+            <button onClick={() => startSession()} disabled={busy}>
+              {busy ? '준비 중...' : '이야기 시작'}
+            </button>
+          )}
           <button className="link" onClick={onExit}>
             ← 목록으로
           </button>

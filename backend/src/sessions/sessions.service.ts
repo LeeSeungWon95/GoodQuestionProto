@@ -53,7 +53,7 @@ export class SessionsService {
     };
   }
 
-  async start(parentId: string, childId: string, storyId: string) {
+  async start(parentId: string, childId: string, storyId: string, restart = false) {
     await this.assertOwnership(parentId, childId);
 
     // 동의 검증 — 동의 없거나 철회된 아이는 세션 시작 불가 (팀 DB안 규칙)
@@ -61,6 +61,14 @@ export class SessionsService {
       where: { childId, withdrawnAt: null },
     });
     if (!consent) throw new ForbiddenException('CONSENT_REQUIRED');
+
+    // 처음부터 다시: 미완료 세션을 중단 처리 (기록은 남김 — 삭제 아님)
+    if (restart) {
+      await this.prisma.storySession.updateMany({
+        where: { childId, storyId, status: { in: ['in_progress', 'post_activity'] } },
+        data: { status: 'stopped', lastActivityAt: new Date() },
+      });
+    }
 
     // 같은 이야기의 미완료 세션이 있으면 새로 만들지 않고 이어한다
     // (in_progress → 하던 장면부터 / post_activity → 후속 활동부터)

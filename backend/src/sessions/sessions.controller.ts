@@ -15,9 +15,13 @@ export class SessionsController {
   }
 
   // POST /api/v1/sessions — 세션 시작 (동의 검증 포함)
+  // restart: true면 미완료 세션을 중단 처리하고 처음부터 새로 시작
   @Post('sessions')
-  start(@Req() req: { parentId: string }, @Body() dto: { childId: string; storyId: string }) {
-    return this.sessions.start(req.parentId, dto.childId, dto.storyId);
+  start(
+    @Req() req: { parentId: string },
+    @Body() dto: { childId: string; storyId: string; restart?: boolean },
+  ) {
+    return this.sessions.start(req.parentId, dto.childId, dto.storyId, dto.restart ?? false);
   }
 
   // GET /api/v1/sessions/:sessionId — 세션 상태 복원
