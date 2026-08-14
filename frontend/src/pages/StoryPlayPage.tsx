@@ -10,10 +10,12 @@ import PostActivityPage from './PostActivityPage';
 export default function StoryPlayPage({
   child,
   story,
+  autoStart = false,
   onExit,
 }: {
   child: ChildInfo;
   story: Story;
+  autoStart?: boolean; // 홈 이어하기 진입: 상세 화면 없이 즉시 재개
   onExit: () => void;
 }) {
   const [phase, setPhase] = useState<'detail' | 'playing' | 'post'>('detail');
@@ -29,6 +31,12 @@ export default function StoryPlayPage({
       .then((res) => setHasUnfinished(res.session?.storyId === story.id))
       .catch(() => setHasUnfinished(false));
   }, [child.id, story.id]);
+
+  // 홈의 [이어하기]로 들어온 경우: 상세 화면을 건너뛰고 즉시 재개
+  useEffect(() => {
+    if (autoStart) startSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart]);
 
   async function startSession(restart = false) {
     setBusy(true);
@@ -80,6 +88,7 @@ export default function StoryPlayPage({
   }
 
   if (phase === 'detail') {
+    if (autoStart) return <p className="center">이어서 준비하는 중...</p>;
     return (
       <main className="center">
         <div className="card">

@@ -14,10 +14,12 @@ export default function HomePage({
   child,
   onSwitchChild,
   onPlayStory,
+  onContinueStory,
 }: {
   child: ChildInfo;
   onSwitchChild: () => void;
   onPlayStory: (story: Story) => void;
+  onContinueStory: (story: Story) => void;
 }) {
   const [stories, setStories] = useState<Story[]>([]);
   const [active, setActive] = useState<ActiveSession | null>(null);
@@ -44,7 +46,7 @@ export default function HomePage({
         {error && <p className="msg">{error}</p>}
 
         {activeStory && (
-          <button className="continue" onClick={() => onPlayStory(activeStory)}>
+          <button className="continue" onClick={() => onContinueStory(activeStory)}>
             ▶ 이어하기 — {active!.storyTitle}
             <span className="meta">
               {active!.status === 'post_activity' ? '순서 맞추기 하던 중' : '이야기 듣던 중'}

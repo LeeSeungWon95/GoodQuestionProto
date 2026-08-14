@@ -16,6 +16,7 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [child, setChild] = useState<ChildInfo | null>(null);
   const [playingStory, setPlayingStory] = useState<Story | null>(null);
+  const [autoResume, setAutoResume] = useState(false); // 홈 이어하기로 진입 시 상세 건너뛰고 바로 재개
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,9 +36,25 @@ export default function App() {
   if (!child) return <ChildSelectPage onSelect={setChild} />;
   if (playingStory)
     return (
-      <StoryPlayPage child={child} story={playingStory} onExit={() => setPlayingStory(null)} />
+      <StoryPlayPage
+        child={child}
+        story={playingStory}
+        autoStart={autoResume}
+        onExit={() => setPlayingStory(null)}
+      />
     );
   return (
-    <HomePage child={child} onSwitchChild={() => setChild(null)} onPlayStory={setPlayingStory} />
+    <HomePage
+      child={child}
+      onSwitchChild={() => setChild(null)}
+      onPlayStory={(s) => {
+        setAutoResume(false); // 카드 클릭 → 상세 화면부터
+        setPlayingStory(s);
+      }}
+      onContinueStory={(s) => {
+        setAutoResume(true); // 이어하기 배너 → 바로 재개
+        setPlayingStory(s);
+      }}
+    />
   );
 }
