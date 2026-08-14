@@ -194,6 +194,19 @@ select {
   display: flex;
   flex-direction: row;
   gap: 8px;
+  align-items: stretch;
+}
+
+.talkbox {
+  flex: 1;
+  font-size: 18px;
+  line-height: 1.6;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-family: inherit;
+  resize: none;
+  margin-bottom: 0;
 }
 
 .micbtn {

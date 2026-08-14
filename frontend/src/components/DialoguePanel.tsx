@@ -43,8 +43,7 @@ export default function DialoguePanel({
   // 음성 입력 — 인식 결과를 입력창에 채우고, 아이가 [보내기]로 확정 (FR-05 흐름)
   const mic = useSpeechInput(setInput);
 
-  async function send(e: React.FormEvent) {
-    e.preventDefault();
+  async function send() {
     const text = input.trim();
     if (!text) return;
     setBusy(true);
@@ -100,7 +99,13 @@ export default function DialoguePanel({
         <>
           {mic.listening && <p className="note listening">🎤 듣고 있어요... 다 말하면 잠깐 기다려주세요</p>}
           {mic.micError && <p className="msg">{mic.micError}</p>}
-          <form onSubmit={send} className="inputrow">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              send();
+            }}
+            className="inputrow"
+          >
             {mic.supported && (
               <button
                 type="button"
@@ -112,7 +117,9 @@ export default function DialoguePanel({
                 🎤
               </button>
             )}
-            <input
+            <textarea
+              className="talkbox"
+              rows={2}
               placeholder={
                 mic.supported
                   ? '🎤를 누르고 말하거나, 글로 적어보세요'
@@ -120,6 +127,12 @@ export default function DialoguePanel({
               }
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  send(); // Enter로 전송 (줄바꿈은 Shift+Enter)
+                }
+              }}
               disabled={busy}
             />
             <button type="submit" disabled={busy || !input.trim()}>
