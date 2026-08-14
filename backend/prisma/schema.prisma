@@ -1,0 +1,168 @@
+// 굿퀘스천 DB 스키마 — 팀 「DB 구조_260803_수정안」 기준 (docs/03-erd.md 참고)
+// 원안과 다른 점:
+//   - scene_type 컬럼 추가: 도입/전개/대화 화면 유형 구분 (콘텐츠 문서의 화면 흐름 반영)
+//   - 대화 장면 전용 컬럼(character_opening 등)은 도입/전개 장면에서 비므로 nullable
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs" // NestJS 빌드(CommonJS)와 모듈 형식 일치 — 없으면 실행 시 ESM/CJS 충돌
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 보호자 계정. 인증은 Supabase Auth가 담당하며 id = auth.users.id
+model Parent {
+  id        String   @id @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  children Child[]
+
+  @@map("parents")
+}
+
+model Child {
+  id        String   @id @default(uuid()) @db.Uuid
+  parentId  String   @map("parent_id") @db.Uuid
+  name      String
+  birthYear Int      @map("birth_year") @db.SmallInt
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  parent   Parent         @relation(fields: [parentId], references: [id])
+  consents ChildConsent[]
+  sessions StorySession[]
+
+  @@map("children")
+}
+
+// 동의 없거나 철회된 아이는 새 세션 시작 불가 (서버 검증)
+model ChildConsent {
+  id                 String    @id @default(uuid()) @db.Uuid
+  childId            String    @map("child_id") @db.Uuid
+  consentVersion     String    @map("consent_version")
+  verificationMethod String    @map("verification_method") // authenticated_parent | institution_paper | mobile_verification
+  consentedAt        DateTime  @default(now()) @map("consented_at") @db.Timestamptz()
+  withdrawnAt        DateTime? @map("withdrawn_at") @db.Timestamptz()
+
+  child Child @relation(fields: [childId], references: [id])
+
+  @@map("child_consents")
+}
+
+model Story {
+  id                 String  @id @default(uuid()) @db.Uuid
+  title              String
+  summary            String
+  difficulty         String
+  topics             String[]
+  estimatedMinutes   Int?    @map("estimated_minutes") @db.SmallInt
+  thumbnailUrl       String? @map("thumbnail_url")
+  postActivityConfig Json?   @map("post_activity_config") // { cards: [{id,text,correct_order}], retelling_keywords: [] }
+  status             String  @default("draft") // draft | published | archived
+
+  scenes   StoryScene[]
+  sessions StorySession[]
+
+  @@map("stories")
+}
+
+model StoryScene {
+  id               String  @id @default(uuid()) @db.Uuid
+  storyId          String  @map("story_id") @db.Uuid
+  sceneOrder       Int     @map("scene_order") @db.SmallInt
+  sceneType        String  @map("scene_type") // intro | story | dialogue
+  imageUrl         String? @map("image_url")
+  sceneDescription String? @map("scene_description")
+  conflict         String?
+  characterName    String? @map("character_name")
+  characterOpening String? @map("character_opening")
+  characterClosing String? @map("character_closing")
+  sceneGoal        String? @map("scene_goal")
+  requiredElements String[] @map("required_elements") // DECISION|REASON|PERSPECTIVE|SOLUTION|RESULT|EMOTION|EMPATHY|REQUEST
+  preferredTurns   Int?    @map("preferred_turns") @db.SmallInt
+  maxTurns         Int?    @map("max_turns") @db.SmallInt
+
+  story    Story          @relation(fields: [storyId], references: [id])
+  messages Message[]
+  sessions StorySession[] @relation("CurrentScene")
+
+  @@unique([storyId, sceneOrder])
+  @@map("story_scenes")
+}
+
+model StorySession {
+  id                           String    @id @default(uuid()) @db.Uuid
+  childId                      String    @map("child_id") @db.Uuid
+  storyId                      String    @map("story_id") @db.Uuid
+  currentSceneId               String?   @map("current_scene_id") @db.Uuid
+  currentChildTurnCount        Int       @default(0) @map("current_child_turn_count") @db.SmallInt
+  accumulatedElements          String[]  @map("accumulated_elements")
+  lastDetectedElements         String[]  @map("last_detected_elements")
+  lastResponseMode             String?   @map("last_response_mode") // NORMAL | GUIDED | CLOSING
+  lastGuidanceTarget           String?   @map("last_guidance_target")
+  turnsWithoutNewElement       Int       @default(0) @map("turns_without_new_element") @db.SmallInt
+  consecutiveLowInformationTurns Int     @default(0) @map("consecutive_low_information_turns") @db.SmallInt
+  sceneGoalMet                 Boolean   @default(false) @map("scene_goal_met")
+  sceneEndReason               String?   @map("scene_end_reason") // GOAL_MET | MAX_TURNS
+  status                       String    @default("in_progress") // in_progress | post_activity | completed | stopped
+  startedAt                    DateTime  @default(now()) @map("started_at") @db.Timestamptz()
+  completedAt                  DateTime? @map("completed_at") @db.Timestamptz()
+  lastActivityAt               DateTime  @default(now()) @map("last_activity_at") @db.Timestamptz()
+
+  child        Child               @relation(fields: [childId], references: [id])
+  story        Story               @relation(fields: [storyId], references: [id])
+  currentScene StoryScene?         @relation("CurrentScene", fields: [currentSceneId], references: [id])
+  messages     Message[]
+  postActivity PostActivityResult?
+
+  @@map("story_sessions")
+}
+
+model Message {
+  id          String   @id @default(uuid()) @db.Uuid
+  sessionId   String   @map("session_id") @db.Uuid
+  sceneId     String   @map("scene_id") @db.Uuid
+  speakerType String   @map("speaker_type") // child | character | system
+  turnOrder   Int      @map("turn_order")
+  text        String
+  sttRawText  String?  @map("stt_raw_text") // child 발화만. 원본 음성은 저장하지 않음
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  session  StorySession       @relation(fields: [sessionId], references: [id])
+  scene    StoryScene         @relation(fields: [sceneId], references: [id])
+  analysis UtteranceAnalysis?
+
+  @@map("messages")
+}
+
+// 아이 메시지 1건당 분석 1건. LLM은 이 값만 제안, 진행 판정은 서버 규칙
+model UtteranceAnalysis {
+  id                String  @id @default(uuid()) @db.Uuid
+  messageId         String  @unique @map("message_id") @db.Uuid
+  childIntent       String  @map("child_intent")
+  mainPoint         String? @map("main_point")
+  detectedElements  Json    @map("detected_elements") // [{ type, evidence }]
+  utteranceValidity String  @map("utterance_validity") // VALID | SHORT | UNCLEAR | OFF_TOPIC | PLAYFUL
+  analysisVersion   String  @default("mvp_v1") @map("analysis_version")
+
+  message Message @relation(fields: [messageId], references: [id])
+
+  @@map("utterance_analyses")
+}
+
+model PostActivityResult {
+  id             String    @id @default(uuid()) @db.Uuid
+  sessionId      String    @unique @map("session_id") @db.Uuid
+  submittedOrder String[]  @map("submitted_order")
+  isOrderCorrect Boolean?  @map("is_order_correct")
+  attemptCount   Int       @default(0) @map("attempt_count") @db.SmallInt
+  retellingText  String?   @map("retelling_text")
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz()
+
+  session StorySession @relation(fields: [sessionId], references: [id])
+
+  @@map("post_activity_results")
+}

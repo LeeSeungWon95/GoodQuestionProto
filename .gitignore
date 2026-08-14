@@ -1,0 +1,23 @@
+# ===== 프로젝트 공통 제외 목록 =====
+
+# 비밀값 — 절대 커밋 금지 (.env.example 양식만 공유)
+.env
+.env.*
+!.env.example
+
+# 의존성 창고·빌드 산출물 (npm install / build로 재생성)
+node_modules/
+dist/
+
+# Prisma가 생성하는 파생 코드 (npx prisma generate로 재생성)
+backend/generated/
+
+# OS·에디터 잡파일
+.DS_Store
+Thumbs.db
+
+# AI 도구용 참고 문서 (Prisma init이 생성 — 저장소에 불필요)
+backend/.agents/
+backend/.claude/
+backend/.windsurf/
+backend/skills-lock.json
