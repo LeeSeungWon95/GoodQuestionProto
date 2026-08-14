@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChildDto } from './dto/create-child.dto';
 
@@ -44,5 +44,25 @@ export class ChildrenService {
       },
     });
     return { id: child.id, name: child.name, birthYear: child.birthYear, hasConsent: true };
+  }
+
+  // 아이 + 딸린 학습 기록 전체 삭제.
+  // FK 사슬(분석→대화→활동결과→세션→동의→아이) 역순으로 지우는 트랜잭션 — 전부 성공 아니면 전부 취소
+  async remove(parentId: string, childId: string) {
+    const child = await this.prisma.child.findUnique({ where: { id: childId } });
+    if (!child) throw new NotFoundException('NOT_FOUND');
+    if (child.parentId !== parentId) throw new ForbiddenException('FORBIDDEN');
+
+    await this.prisma.$transaction([
+      this.prisma.utteranceAnalysis.deleteMany({
+        where: { message: { session: { childId } } },
+      }),
+      this.prisma.message.deleteMany({ where: { session: { childId } } }),
+      this.prisma.postActivityResult.deleteMany({ where: { session: { childId } } }),
+      this.prisma.storySession.deleteMany({ where: { childId } }),
+      this.prisma.childConsent.deleteMany({ where: { childId } }),
+      this.prisma.child.delete({ where: { id: childId } }),
+    ]);
+    return { deleted: true };
   }
 }

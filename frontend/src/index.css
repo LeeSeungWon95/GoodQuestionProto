@@ -91,15 +91,37 @@ select {
   background: #fff;
 }
 
+.childrow {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
 .child {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
+  flex: 1;
   background: #fff7ed;
   color: #2b2b2b;
   border: 1px solid #fed7aa;
   margin-bottom: 8px;
+}
+
+.child:disabled {
+  opacity: 0.7;
+}
+
+.delbtn {
+  flex-shrink: 0;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  border-radius: 10px;
+  padding: 0 16px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .consent {

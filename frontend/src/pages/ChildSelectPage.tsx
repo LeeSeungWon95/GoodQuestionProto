@@ -9,6 +9,7 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
   const [children, setChildren] = useState<ChildInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(false); // 관리(삭제) 모드
   const [error, setError] = useState('');
 
   const [name, setName] = useState('');
@@ -31,6 +32,23 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
     loadChildren();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function removeChild(c: ChildInfo) {
+    // 되돌릴 수 없는 삭제 — 반드시 확인을 거친다
+    const ok = window.confirm(
+      `'${c.name}' 프로필과 모든 학습 기록(대화, 활동 결과)이 완전히 삭제됩니다.\n정말 삭제할까요?`,
+    );
+    if (!ok) return;
+    setBusy(true);
+    setError('');
+    try {
+      await api(`/children/${c.id}`, { method: 'DELETE' });
+      await loadChildren();
+    } catch (e) {
+      setError(e instanceof ApiError ? `삭제 실패 ${e.status}: ${e.code}` : String(e));
+    }
+    setBusy(false);
+  }
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -66,11 +84,30 @@ export default function ChildSelectPage({ onSelect }: { onSelect: (child: ChildI
         <p className="sub">아이를 선택하거나 새로 등록하세요</p>
 
         {children.map((c) => (
-          <button key={c.id} className="child" onClick={() => onSelect(c)}>
-            <strong>{c.name}</strong>
-            <span className="meta">{c.birthYear}년생</span>
-          </button>
+          <div key={c.id} className="childrow">
+            <button className="child" onClick={() => onSelect(c)} disabled={editing || busy}>
+              <strong>{c.name}</strong>
+              <span className="meta">{c.birthYear}년생</span>
+            </button>
+            {editing && (
+              <button className="delbtn" onClick={() => removeChild(c)} disabled={busy}>
+                삭제
+              </button>
+            )}
+          </div>
         ))}
+
+        {children.length > 0 && (
+          <button
+            className="link"
+            onClick={() => {
+              setEditing(!editing);
+              setError('');
+            }}
+          >
+            {editing ? '관리 끝내기' : '프로필 관리 (삭제)'}
+          </button>
+        )}
 
         {showForm ? (
           <form onSubmit={handleRegister}>

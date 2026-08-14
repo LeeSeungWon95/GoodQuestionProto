@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Req, UseGuards } from '@nestjs/common';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
 import { ChildrenService } from './children.service';
 import { CreateChildDto } from './dto/create-child.dto';
@@ -21,5 +21,11 @@ export class ChildrenController {
     @Body() dto: CreateChildDto,
   ) {
     return this.children.createWithConsent(req.parentId, req.parentEmail, dto);
+  }
+
+  // DELETE /api/v1/children/:childId — 아이와 모든 학습 기록 삭제
+  @Delete(':childId')
+  remove(@Req() req: { parentId: string }, @Param('childId', ParseUUIDPipe) childId: string) {
+    return this.children.remove(req.parentId, childId);
   }
 }
