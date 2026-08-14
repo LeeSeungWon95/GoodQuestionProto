@@ -3,7 +3,14 @@ import OpenAI from 'openai';
 
 @Injectable()
 export class SpeechService {
-  private readonly openai = new OpenAI(); // OPENAI_API_KEY 환경변수 사용
+  // 지연 초기화: OpenAI 클라이언트는 실제 호출 시점에 생성한다.
+  // (생성자에서 만들면 키 없는 환경에서 서버 시동 자체가 실패 — Nest가 모든 provider를 부팅 시 조립하므로)
+  private openai: OpenAI | null = null;
+
+  private getOpenAI(): OpenAI {
+    this.openai ??= new OpenAI(); // OPENAI_API_KEY 환경변수 사용 — 없으면 이 시점에 에러
+    return this.openai;
+  }
 
   // 음성 → 텍스트. 원본 음성은 변환 후 즉시 폐기 (저장 금지 — D-06)
   async transcribe(audio: Express.Multer.File) {
