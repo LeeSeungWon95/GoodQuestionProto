@@ -99,6 +99,7 @@ export default function DialoguePanel({
       ) : (
         <>
           {mic.listening && <p className="note listening">🎤 듣고 있어요... 다 말하면 잠깐 기다려주세요</p>}
+          {mic.micError && <p className="msg">{mic.micError}</p>}
           <form onSubmit={send} className="inputrow">
             {mic.supported && (
               <button

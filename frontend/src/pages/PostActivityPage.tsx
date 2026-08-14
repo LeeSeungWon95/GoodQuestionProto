@@ -117,6 +117,7 @@ export default function PostActivityPage({
               {mic.listening ? '🎤 듣고 있어요...' : '🎤 말로 이야기하기'}
             </button>
           )}
+          {mic.micError && <p className="msg">{mic.micError}</p>}
           <textarea
             rows={4}
             placeholder="옛날에 방귀를 크게 뀌는 며느리가 살았는데..."
