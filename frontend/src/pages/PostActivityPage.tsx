@@ -129,7 +129,7 @@ export default function PostActivityPage({
               }}
               disabled={busy}
             >
-              {mic.listening ? '🎤 듣고 있어요...' : '🎤 말로 이야기하기'}
+              {mic.listening ? '🎤 듣고 있어요 — 다 말하면 여기를 눌러요' : '🎤 말로 이야기하기'}
             </button>
           )}
           {mic.micError && <p className="msg">{mic.micError}</p>}
