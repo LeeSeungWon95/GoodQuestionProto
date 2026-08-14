@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../lib/api';
+import { personalize } from '../lib/personalize';
 import { speak, splitSentences, stopSpeaking, ttsSupported } from '../lib/tts';
 import { useSpeechInput } from '../lib/useSpeechInput';
 import type { CharacterMessage, SceneView } from '../lib/types';
@@ -24,15 +25,23 @@ interface SubmitResult {
 export default function DialoguePanel({
   sessionId,
   scene,
+  childName,
   onSceneClosed,
 }: {
   sessionId: string;
   scene: SceneView;
+  childName: string; // 콘텐츠의 ㅇㅇ 자리에 넣을 아이 이름
   onSceneClosed: (isStoryComplete: boolean) => void;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>(
     scene.characterMessage
-      ? [{ id: scene.characterMessage.messageId, who: 'character', text: scene.characterMessage.text }]
+      ? [
+          {
+            id: scene.characterMessage.messageId,
+            who: 'character',
+            text: personalize(scene.characterMessage.text, childName),
+          },
+        ]
       : [],
   );
   const [input, setInput] = useState('');
@@ -78,7 +87,11 @@ export default function DialoguePanel({
       });
       setMessages((prev) => [
         ...prev,
-        { id: res.characterMessage.messageId, who: 'character', text: res.characterMessage.text },
+        {
+          id: res.characterMessage.messageId,
+          who: 'character',
+          text: personalize(res.characterMessage.text, childName),
+        },
       ]);
       if (res.sceneStatus === 'closed') {
         setClosed(true);
