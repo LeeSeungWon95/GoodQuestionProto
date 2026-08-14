@@ -31,11 +31,11 @@ export interface ModeDecision {
 // 가짜 분석기용 사고 요소 판별 사전 — 한국어 단서 패턴 (8종, 팀 규칙 문서의 요소 정의 기준)
 const ELEMENT_PATTERNS: { type: string; patterns: RegExp[] }[] = [
   { type: 'REASON', patterns: [/왜냐하면/, /때문/, /니까/, /잖아/] },
-  { type: 'SOLUTION', patterns: [/방법/, /하면 되/, /하면 돼/, /해보/, /말해/, /해봐/, /하자/] },
+  { type: 'SOLUTION', patterns: [/방법/, /하면 되/, /하면 돼/, /해 ?보/, /말해/, /해 ?봐/, /하자/, /도와/, /쓰면/] },
   { type: 'EMOTION', patterns: [/슬퍼/, /슬프/, /기뻐/, /무서/, /속상/, /부끄/, /좋아/, /싫어/, /창피/] },
   { type: 'EMPATHY', patterns: [/불쌍/, /힘들/, /이해/, /마음이/, /안쓰/] },
   { type: 'PERSPECTIVE', patterns: [/라면/, /입장/, /생각에/, /봤을 때/, /것 같/] },
-  { type: 'REQUEST', patterns: [/주세요/, /해줘/, /부탁/, /해 주/] },
+  { type: 'REQUEST', patterns: [/주세요/, /해줘/, /부탁/, /해 주/, /달라/] },
   { type: 'DECISION', patterns: [/할래/, /안 돼/, /안돼/, /해야/, /하기로/] },
   { type: 'RESULT', patterns: [/그러면/, /그럼/, /될 거/, /떨어지/, /생길/] },
 ];

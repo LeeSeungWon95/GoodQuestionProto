@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, ApiError } from '../lib/api';
+import { stopSpeaking } from '../lib/tts';
 import { useSpeechInput } from '../lib/useSpeechInput';
 import type { ChildInfo } from '../lib/types';
 
@@ -111,7 +112,11 @@ export default function PostActivityPage({
             <button
               type="button"
               className={`micbtn wide${mic.listening ? ' on' : ''}`}
-              onClick={() => (mic.listening ? mic.stop() : mic.start())}
+              onClick={() => {
+                stopSpeaking(); // 재생 중 음성 즉시 중단 후 녹음 시작
+                if (mic.listening) mic.stop();
+                else mic.start();
+              }}
               disabled={busy}
             >
               {mic.listening ? '🎤 듣고 있어요...' : '🎤 말로 이야기하기'}

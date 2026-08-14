@@ -140,7 +140,11 @@ export default function DialoguePanel({
               <button
                 type="button"
                 className={`micbtn${mic.listening ? ' on' : ''}`}
-                onClick={() => (mic.listening ? mic.stop() : mic.start())}
+                onClick={() => {
+                  stopSpeaking(); // 캐릭터가 말하는 중이면 즉시 멈춤 — 아이 발화 방해 금지
+                  if (mic.listening) mic.stop();
+                  else mic.start();
+                }}
                 disabled={busy}
                 aria-label="음성으로 말하기"
               >
