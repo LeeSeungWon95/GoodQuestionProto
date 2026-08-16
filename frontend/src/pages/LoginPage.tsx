@@ -10,17 +10,21 @@ export default function LoginPage() {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
+  // 아이디만 입력하면 @test.com 을 붙여 이메일로 만든다 (테스트 계정 admin → admin@test.com).
+  // Supabase Auth는 이메일 형식만 받으므로 회원가입 때도 동일하게 적용된다.
+  const toEmail = (v: string) => (v.includes('@') ? v.trim() : `${v.trim()}@test.com`);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); // 폼 제출 시 페이지 새로고침(전통 방식) 방지 — SPA는 새로고침 없이 처리
     setBusy(true);
     setMessage('');
 
     if (mode === 'login') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email: toEmail(email), password });
       if (error) setMessage(`로그인 실패: ${error.message}`);
       // 성공 시에는 App.tsx의 onAuthStateChange가 감지해서 홈으로 자동 전환
     } else {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email: toEmail(email), password });
       if (error) {
         setMessage(`가입 실패: ${error.message}`);
       } else if (!data.session) {
@@ -39,18 +43,20 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit}>
           <input
-            type="email"
-            placeholder="이메일"
+            type="text"
+            inputMode="email"
+            autoCapitalize="none"
+            placeholder="이메일 또는 아이디"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
           <input
             type="password"
-            placeholder="비밀번호 (6자 이상)"
+            placeholder={mode === 'signup' ? '비밀번호 (6자 이상)' : '비밀번호'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            minLength={6}
+            minLength={mode === 'signup' ? 6 : undefined} // 로그인은 서버가 판정 — 짧은 테스트 비밀번호 허용
             required
           />
           <button type="submit" disabled={busy}>
