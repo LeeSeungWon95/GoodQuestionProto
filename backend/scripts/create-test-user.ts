@@ -1,3 +1,9 @@
+// ⚠️ 테스트·시연 전용 스크립트 — 실서비스 계정은 이걸로 만들지 않는다.
+//    실서비스에서는 사용자가 로그인 화면의 회원가입으로 직접 가입하고 이메일 인증을 거친다.
+//    실서비스 전환 시: ① 프론트 LoginPage.tsx 의 TEST_LOGIN_SHORTCUT 을 false 로
+//                    ② Supabase 대시보드 → Authentication → Users 에서 admin@test.com 삭제
+//                    ③ .env 의 SUPABASE_SERVICE_ROLE_KEY 제거 (서버 런타임은 이 키를 쓰지 않음)
+//
 // 테스트 계정 생성 (이메일 인증 없이 바로 로그인 가능)
 // 실행: npm run auth:test-user            → admin@test.com / 1234
 //       npm run auth:test-user -- a@b.com pw → 원하는 계정

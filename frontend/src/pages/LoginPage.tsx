@@ -1,6 +1,21 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ⚠️ 테스트 편의 스위치 — 실서비스 배포 전에 반드시 false 로 바꿀 것
+//
+// true  (지금, 시연·테스트용):
+//   - 아이디만 입력해도 됨: 'admin' → 'admin@test.com' 으로 자동 보정
+//   - 로그인 비밀번호 6자 미만 허용 (테스트 계정 admin / 1234)
+// false (실서비스):
+//   - 반드시 실제 이메일을 입력해야 함 (자동 보정 없음)
+//   - 로그인·회원가입 모두 비밀번호 6자 이상 (Supabase 기본 규칙과 일치)
+//
+// 이 상수 하나만 바꾸면 아래 표시된 곳이 전부 원복된다. 다른 코드는 손댈 필요 없음.
+// 실서비스 전환 후에는 Supabase 대시보드의 테스트 계정(admin@test.com)도 삭제할 것.
+// ─────────────────────────────────────────────────────────────────────────────
+const TEST_LOGIN_SHORTCUT = true;
+
 // 보호자 로그인 / 회원가입 화면 (FR-01)
 // 인증은 백엔드를 거치지 않고 Supabase Auth와 직접 통신한다.
 export default function LoginPage() {
@@ -10,9 +25,11 @@ export default function LoginPage() {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
-  // 아이디만 입력하면 @test.com 을 붙여 이메일로 만든다 (테스트 계정 admin → admin@test.com).
-  // Supabase Auth는 이메일 형식만 받으므로 회원가입 때도 동일하게 적용된다.
-  const toEmail = (v: string) => (v.includes('@') ? v.trim() : `${v.trim()}@test.com`);
+  // [TEST_LOGIN_SHORTCUT] '@' 없는 입력에 @test.com 을 붙인다. false 면 입력값 그대로 사용.
+  const toEmail = (v: string) => {
+    const t = v.trim();
+    return TEST_LOGIN_SHORTCUT && !t.includes('@') ? `${t}@test.com` : t;
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); // 폼 제출 시 페이지 새로고침(전통 방식) 방지 — SPA는 새로고침 없이 처리
@@ -42,21 +59,25 @@ export default function LoginPage() {
         <p className="sub">이야기로 배우는 말하기 교육</p>
 
         <form onSubmit={handleSubmit}>
+          {/* [TEST_LOGIN_SHORTCUT] true: 아이디 허용(text) / false: 이메일 형식 강제(email) */}
           <input
-            type="text"
+            type={TEST_LOGIN_SHORTCUT ? 'text' : 'email'}
             inputMode="email"
             autoCapitalize="none"
-            placeholder="이메일 또는 아이디"
+            placeholder={TEST_LOGIN_SHORTCUT ? '이메일 또는 아이디' : '이메일'}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
+          {/* [TEST_LOGIN_SHORTCUT] true: 로그인 시 6자 미만 허용 / false: 항상 6자 이상 */}
           <input
             type="password"
-            placeholder={mode === 'signup' ? '비밀번호 (6자 이상)' : '비밀번호'}
+            placeholder={
+              TEST_LOGIN_SHORTCUT && mode === 'login' ? '비밀번호' : '비밀번호 (6자 이상)'
+            }
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            minLength={mode === 'signup' ? 6 : undefined} // 로그인은 서버가 판정 — 짧은 테스트 비밀번호 허용
+            minLength={TEST_LOGIN_SHORTCUT && mode === 'login' ? undefined : 6}
             required
           />
           <button type="submit" disabled={busy}>
